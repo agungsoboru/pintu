@@ -54,8 +54,6 @@ else:
     port = 7090
 
 
-
-
 # ----------------------------- Configuration -----------------------------
 
 HOST = domain_genshin

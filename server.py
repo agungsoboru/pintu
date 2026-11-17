@@ -10,20 +10,14 @@ openssl req -x509 -newkey rsa:4096 -sha256 -nodes \
   -addext "basicConstraints=critical,CA:TRUE" \
   -addext "keyUsage=critical,keyCertSign,cRLSign"
 
-
-
-
-  
 openssl req -new -newkey rsa:2048 -nodes \
   -keyout certs/server.key \
   -out certs/server.csr \
   -subj "/CN=141.11.190.106"
 
-
 echo "subjectAltName=IP:141.11.190.106
 extendedKeyUsage=serverAuth
 keyUsage=digitalSignature,keyEncipherment" > certs/server.ext
-
 
 openssl x509 -req \
   -in certs/server.csr \
@@ -66,7 +60,7 @@ CERT_FILE = "certs/server.crt"
 KEY_FILE = "certs/server.key"
 
 # Must exactly match client.py. Replace with a random secret >= 32 bytes.
-PRE_SHARED_KEY = b""
+PRE_SHARED_KEY = b"zsHHavnaPyjN7pTHdb-UWYk-KohSgS4MnCXn_5e15mSqRX6y5OlUDZTIDCJYhL02"
 
 # ------------------------------- Crypto -----------------------------------
 
@@ -276,7 +270,7 @@ class MessageServer:
             self.sessions = [s for s in self.sessions if s.running.is_set()]
             return list(self.sessions)
 
-        
+
     def console(self):
         selected_session = None
 
@@ -340,17 +334,14 @@ class MessageServer:
                     if not message:
                         continue
 
-                    response = selected_session.send_request(message)
 
                     response = str(response).replace("b'", "").replace("'", "")
                     response = response.replace("\\n", "\n")
-
                     print("[CLIENT RESPONSE]", response)
 
                 except (ConnectionError, OSError) as exc:
                     print("[ERROR] Koneksi terputus:", exc)
                     selected_session = None
-
 
     def run(self) -> None:
         context = self.tls_context()
